@@ -575,7 +575,7 @@
         radial-gradient(ellipse 70% 90% at 15% 50%, rgba(232,160,48,0.12) 0%, transparent 65%),
         radial-gradient(ellipse 70% 90% at 85% 50%, rgba(60,100,220,0.12) 0%, transparent 65%);
       border-radius: 10px;
-      padding: 18px 16px 14px;
+      padding: 28px 20px 22px;
       text-align: center;
       margin: 0 12px;
     }
@@ -591,50 +591,41 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 10px;
-      margin-bottom: 14px;
+      gap: 24px;
+      margin-bottom: 18px;
     }
-    .hero-team {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 8px;
-      flex: 1;
+    .hero-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid rgba(255,255,255,0.15);
+      flex-shrink: 0;
     }
     .hero-badge {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 80px;
-      height: 38px;
-      border-radius: 8px;
-      font-size: 17px;
+      padding: 16px 32px;
+      border-radius: 10px;
+      font-size: 22px;
       font-weight: 800;
       letter-spacing: 0.03em;
     }
-    .hero-owner {
-      font-size: 10px;
-      font-weight: 800;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: #fff;
-    }
     .hero-mid {
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
-      padding: 0 4px;
     }
     .hero-imp {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 38px;
-      height: 38px;
+      width: 56px;
+      height: 56px;
       border-radius: 50%;
-      font-size: 17px;
+      font-size: 22px;
       font-weight: 800;
     }
     .hero-datetime {
@@ -997,15 +988,11 @@
         `<td colspan="6" class="hero-cell"><div class="hero-card">` +
           `<div class="hero-eyebrow">Next Match</div>` +
           `<div class="hero-matchup">` +
-            `<div class="hero-team">` +
-              `<span class="hero-badge t-${popTeam}">${popTeam}</span>` +
-              `<div class="hero-owner">Pop</div>` +
-            `</div>` +
+            `<img src="assets/pop-md.png" alt="Pop" class="hero-avatar">` +
+            `<span class="hero-badge t-${popTeam}">${popTeam}</span>` +
             `<div class="hero-mid"><span class="hero-imp ${vCls}">${imp}</span></div>` +
-            `<div class="hero-team">` +
-              `<span class="hero-badge t-${sonTeam}">${sonTeam}</span>` +
-              `<div class="hero-owner">Son</div>` +
-            `</div>` +
+            `<span class="hero-badge t-${sonTeam}">${sonTeam}</span>` +
+            `<img src="assets/son-md.png" alt="Son" class="hero-avatar">` +
           `</div>` +
           `<div class="hero-datetime">${dow} ${dd} ${mon} · ${to12h(time)} IST</div>` +
         `</div></td>`;
