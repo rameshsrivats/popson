@@ -48,9 +48,24 @@
           rgba(255,255,255,0.018) 18px, rgba(255,255,255,0.018) 19px
         );
       color: #fff;
-      padding: 28px 20px 26px;
+      padding: 28px 20px 20px;
       text-align: center;
       position: relative;
+    }
+
+    /* ─── Sticky score bar (bottom half of header) ─── */
+    .score-bar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: var(--navy);
+      background-image:
+        radial-gradient(ellipse 80% 120% at 20% 50%, rgba(232,160,48,0.08) 0%, transparent 65%),
+        radial-gradient(ellipse 80% 120% at 80% 50%, rgba(40,80,200,0.10) 0%, transparent 65%);
+      border-top: 1px solid rgba(255,255,255,0.07);
+      color: #fff;
+      padding: 14px 20px 18px;
+      text-align: center;
     }
 
     .season-pill {
@@ -88,6 +103,21 @@
       align-items: center;
       gap: 7px;
       padding: 0 14px;
+    }
+
+    .player-face-score {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header-score {
+      font-size: 44px;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -1px;
     }
 
     .avatar-wrap {
@@ -236,9 +266,9 @@
     }
 
     /* ─── Table wrapper ────────────────────────────────── */
+    /* overflow-x:clip does NOT create a scroll container, so sticky thead works */
     .table-outer {
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
+      overflow-x: clip;
       background: var(--surface);
     }
 
@@ -249,8 +279,8 @@
       min-width: 380px;
     }
 
-    /* Sticky header */
-    thead { position: sticky; top: 0; z-index: 10; }
+    /* Sticky header — top set by JS after load; fallback keeps it clear of score-bar */
+    thead { position: sticky; top: 150px; z-index: 10; }
 
     thead tr { background: #2D3748; }
 
@@ -399,6 +429,136 @@
     .t-GT   { background: #0B4973; color: #fff; }
     .t-LSG  { background: #A72056; color: #fff; }
 
+
+    /* ─── Result avatar (in table Result column) ───────── */
+    .result-avatar {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: block;
+      margin: 0 auto;
+    }
+
+    /* ─── Last-result strip (injected row) ─────────────── */
+    .lr-row td { padding: 0; }
+    .lr-inner {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 9px 12px;
+      background: #F7F6F2;
+      border-top: 2px solid var(--border-2);
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+      color: var(--text);
+    }
+    .lr-label {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-3);
+      flex-shrink: 0;
+      margin-right: 2px;
+    }
+    .lr-beat {
+      font-size: 12px;
+      color: var(--text-2);
+      flex-shrink: 0;
+    }
+    .lr-pts {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+      flex-shrink: 0;
+    }
+    .lr-pts-avatar {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      display: block;
+    }
+
+    /* ─── Next-match hero (injected row) ───────────────── */
+    .hero-row td { padding: 10px 0 14px; background: var(--bg); }
+    .hero-card {
+      background: var(--navy);
+      background-image:
+        radial-gradient(ellipse 70% 90% at 15% 50%, rgba(232,160,48,0.12) 0%, transparent 65%),
+        radial-gradient(ellipse 70% 90% at 85% 50%, rgba(60,100,220,0.12) 0%, transparent 65%);
+      border-radius: 10px;
+      padding: 18px 16px 14px;
+      text-align: center;
+      margin: 0 12px;
+    }
+    .hero-eyebrow {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: #fff;
+      margin-bottom: 14px;
+    }
+    .hero-matchup {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .hero-team {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 80px;
+      height: 38px;
+      border-radius: 8px;
+      font-size: 17px;
+      font-weight: 800;
+      letter-spacing: 0.03em;
+    }
+    .hero-owner {
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #fff;
+    }
+    .hero-mid {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      padding: 0 4px;
+    }
+    .hero-imp {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      font-size: 17px;
+      font-weight: 800;
+    }
+    .hero-datetime {
+      font-size: 12px;
+      font-weight: 700;
+      color: #fff;
+    }
+
     /* ─── Footer ───────────────────────────────────────── */
     .footer {
       text-align: center;
@@ -429,34 +589,9 @@
 
 <body>
 
-  <!-- ── Masthead ──────────────────────────────────── -->
+  <!-- ── Masthead top (scrolls away) ─────────────── -->
   <header class="masthead">
     <div class="season-pill">IPL 2026</div>
-
-    <div class="players-row">
-      <div class="player">
-        <div class="avatar-wrap">
-          <img src="assets/pop-lg.png" alt="Ramesh">
-        </div>
-        <div class="player-label">Pop</div>
-        <div class="player-name">Ramesh</div>
-      </div>
-
-      <div class="vs-col">
-        <div class="vs-line"></div>
-        <div class="vs-text">VS</div>
-        <div class="vs-line"></div>
-      </div>
-
-      <div class="player">
-        <div class="avatar-wrap">
-          <img src="assets/son-lg.png" alt="Anmol">
-        </div>
-        <div class="player-label">Son</div>
-        <div class="player-name">Anmol</div>
-      </div>
-    </div>
-
     <div class="brand">PopSon</div>
     <div class="brand-rule">
       <span></span>
@@ -464,6 +599,39 @@
       <span></span>
     </div>
   </header>
+
+  <!-- ── Sticky score bar (avatars + scores) ──────── -->
+  <div class="score-bar">
+    <div class="players-row" style="margin-bottom:0">
+      <div class="player">
+        <div class="player-face-score">
+          <div class="avatar-wrap">
+            <img src="assets/pop-lg.png" alt="Ramesh">
+          </div>
+          <span class="header-score" id="sb-pop">0</span>
+        </div>
+        <div class="player-label">Pop</div>
+        <div class="player-name">Ramesh</div>
+      </div>
+
+      <div class="vs-col" style="padding-bottom:36px">
+        <div class="vs-line"></div>
+        <div class="vs-text">VS</div>
+        <div class="vs-line"></div>
+      </div>
+
+      <div class="player">
+        <div class="player-face-score">
+          <span class="header-score" id="sb-son">0</span>
+          <div class="avatar-wrap">
+            <img src="assets/son-lg.png" alt="Anmol">
+          </div>
+        </div>
+        <div class="player-label">Son</div>
+        <div class="player-name">Anmol</div>
+      </div>
+    </div>
+  </div>
 
   <div class="content">
 <!-- ── Fixtures ───────────────────────────────────── -->
@@ -497,9 +665,15 @@
   <script>
     'use strict';
 
+    // Prevent browser from restoring a stale scroll position
+    if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+
     /* ── Rankings ─────────────────────────────────── */
     const POP = {MI:1,RCB:2,GT:3,DC:4,RR:5,SRH:6,PBKS:7,LSG:8,CSK:9,KKR:10};
     const SON = {MI:1,PBKS:2,RCB:3,GT:4,SRH:5,KKR:6,CSK:7,RR:8,DC:9,LSG:10};
+
+    /* ── Results (hardcoded Stage 2) ──────────────── */
+    const RESULTS = { 0:'RCB', 1:'MI', 2:'RR', 3:'PBKS' };
 
     /* ── Fixtures [day, mon, time, A, B] ──────────── */
     const FIXTURES = [
@@ -579,85 +753,119 @@
     function computeMatch(a, b) {
       const pA = POP[a], pB = POP[b];
       const sA = SON[a], sB = SON[b];
-
       const popPick = pA < pB ? a : b;
       const sonPick = sA < sB ? a : b;
       const pDiff   = Math.abs(pA - pB);
       const sDiff   = Math.abs(sA - sB);
-
       let imp, popTeam, sonTeam;
-
       if (popPick !== sonPick) {
-        // Case 1 — opposite predictions
-        imp     = pDiff + sDiff + 1;
-        popTeam = popPick;
-        sonTeam = sonPick;
+        imp = pDiff + sDiff + 1; popTeam = popPick; sonTeam = sonPick;
       } else {
-        const fav = popPick;
-        const und = fav === a ? b : a;
-
+        const fav = popPick, und = fav === a ? b : a;
         if (pDiff !== sDiff) {
-          // Case 2 — same prediction, different diffs
-          imp     = Math.abs(pDiff - sDiff) + 1;
+          imp = Math.abs(pDiff - sDiff) + 1;
           popTeam = pDiff > sDiff ? fav : und;
           sonTeam = pDiff > sDiff ? und : fav;
         } else {
-          // Case 3 — same prediction, same diff (tiebreaker)
-          imp     = 1;
+          imp = 1;
           const popHasFav = POP[fav] < SON[fav];
           popTeam = popHasFav ? fav : und;
           sonTeam = popHasFav ? und : fav;
         }
       }
-
       return { imp, popTeam, sonTeam };
     }
 
     /* ── Date helpers ─────────────────────────────── */
     const MON = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
     const DOW  = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-
     function getDate(day, mon) { return new Date(2026, MON[mon], day); }
     function getDow(day, mon)  { return DOW[getDate(day, mon).getDay()]; }
-
     function to12h(t) {
       const [h, m] = t.split(':').map(Number);
       return `${h % 12 || 12}:${String(m).padStart(2, '0')}${h >= 12 ? 'pm' : 'am'}`;
     }
 
     /* ── Badge helpers ────────────────────────────── */
-    function tbadge(t) {
-      return `<span class="tbadge t-${t}">${t}</span>`;
-    }
-
+    function tbadge(t) { return `<span class="tbadge t-${t}">${t}</span>`; }
     function vbadge(v) {
       const cls = v <= 3 ? 'v-lo' : v <= 6 ? 'v-md' : 'v-hi';
       return `<span class="vbadge ${cls}">${v}</span>`;
     }
 
-    /* ── Render ───────────────────────────────────── */
+    /* ── Compute scores ───────────────────────────── */
+    let popScore = 0, sonScore = 0;
+    Object.entries(RESULTS).forEach(([idx, winner]) => {
+      const [,,,a,b] = FIXTURES[+idx];
+      const { imp, popTeam } = computeMatch(a, b);
+      if (winner === popTeam) popScore += imp; else sonScore += imp;
+    });
+    document.getElementById('sb-pop').textContent = popScore;
+    document.getElementById('sb-son').textContent = sonScore;
+
+    /* ── Derived indices ──────────────────────────── */
+    const lastIdx = Math.max(...Object.keys(RESULTS).map(Number));
+    const nextIdx = FIXTURES.findIndex((_, i) => !(i in RESULTS));
+
+    /* ── Hero row ─────────────────────────────────── */
+    function createHeroRow() {
+      const [day, mon, time, a, b] = FIXTURES[nextIdx];
+      const { imp, popTeam, sonTeam } = computeMatch(a, b);
+      const dow  = getDow(day, mon);
+      const dd   = String(day).padStart(2, '0');
+      const vCls = imp <= 3 ? 'v-lo' : imp <= 6 ? 'v-md' : 'v-hi';
+      const tr   = document.createElement('tr');
+      tr.id = 'hero-row';
+      tr.className = 'hero-row';
+      tr.innerHTML =
+        `<td colspan="6" class="hero-cell"><div class="hero-card">` +
+          `<div class="hero-eyebrow">Next Match</div>` +
+          `<div class="hero-matchup">` +
+            `<div class="hero-team">` +
+              `<span class="hero-badge t-${popTeam}">${popTeam}</span>` +
+              `<div class="hero-owner">Pop</div>` +
+            `</div>` +
+            `<div class="hero-mid">` +
+              `<span class="hero-imp ${vCls}">${imp}</span>` +
+            `</div>` +
+            `<div class="hero-team">` +
+              `<span class="hero-badge t-${sonTeam}">${sonTeam}</span>` +
+              `<div class="hero-owner">Son</div>` +
+            `</div>` +
+          `</div>` +
+          `<div class="hero-datetime">${dow} ${dd} ${mon} · ${to12h(time)} IST</div>` +
+        `</div></td>`;
+      return tr;
+    }
+
+    /* ── Render fixture rows ──────────────────────── */
     const now = new Date();
     now.setHours(0, 0, 0, 0);
-
     const tbody = document.getElementById('tbody');
+    let lastResultRow = null; // captured during render, used for scroll
 
     FIXTURES.forEach(([day, mon, time, a, b], i) => {
       const { imp, popTeam, sonTeam } = computeMatch(a, b);
-
       const mDate = getDate(day, mon);
       mDate.setHours(0, 0, 0, 0);
       const isToday = mDate.getTime() === now.getTime();
-      const isPast  = mDate < now;
+      const winner  = RESULTS[i];
 
-      const dow  = getDow(day, mon);
-      const dd   = String(day).padStart(2, '0');
-      const res  = isToday
-        ? `<span class="today-dot" title="Today"></span>`
-        : '—';
+      let res;
+      if (winner !== undefined) {
+        const winnerIsPop = winner === popTeam;
+        res = `<img src="assets/${winnerIsPop ? 'pop' : 'son'}-sm.png"` +
+              ` class="result-avatar" title="${winnerIsPop ? 'Pop' : 'Son'} +${imp}">`;
+      } else if (isToday) {
+        res = `<span class="today-dot" title="Today"></span>`;
+      } else {
+        res = '—';
+      }
 
-      const tr = document.createElement('tr');
+      const dow = getDow(day, mon);
+      const dd  = String(day).padStart(2, '0');
+      const tr  = document.createElement('tr');
       if (isToday) tr.classList.add('row-today');
-      else if (isPast) tr.classList.add('row-past');
 
       tr.innerHTML =
         `<td class="c-num">${i + 1}</td>` +
@@ -672,6 +880,34 @@
         `<td class="c-res">${res}</td>`;
 
       tbody.appendChild(tr);
+      if (RESULTS[i] !== undefined) lastResultRow = tr;
+
+      // Inject hero row after last completed match
+      if (i === lastIdx) {
+        tbody.appendChild(createHeroRow());
+      }
+    });
+
+    /* ── Set thead offset + scroll to last completed match (after full load) ── */
+    // offsetDocTop walks offsetParent chain — correct regardless of current scrollY
+    function offsetDocTop(el) {
+      let t = 0;
+      while (el) { t += el.offsetTop; el = el.offsetParent; }
+      return t;
+    }
+
+    window.addEventListener('load', function () {
+      const scoreBar = document.querySelector('.score-bar');
+      const theadEl  = document.querySelector('thead');
+      const sbH = scoreBar ? scoreBar.offsetHeight : 0;
+      const thH = theadEl  ? theadEl.offsetHeight  : 0;
+
+      if (theadEl) theadEl.style.top = sbH + 'px';
+
+      if (lastResultRow) {
+        const targetY = offsetDocTop(lastResultRow) - sbH - thH;
+        window.scrollTo({ top: Math.max(0, targetY), behavior: 'instant' });
+      }
     });
   </script>
 </body>
