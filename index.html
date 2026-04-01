@@ -437,6 +437,30 @@
       border-radius: 50%;
       display: block;
       margin: 0 auto;
+      cursor: pointer;
+    }
+    .result-avatar:hover { opacity: 0.72; }
+
+    /* ─── Result dropdown ──────────────────────────────── */
+    .res-select {
+      -webkit-appearance: none;
+      appearance: none;
+      background: #F0EEE8;
+      border: 1px solid var(--border-2);
+      border-radius: 5px;
+      padding: 3px 4px;
+      font-size: 11px;
+      font-family: inherit;
+      font-weight: 700;
+      color: var(--text);
+      cursor: pointer;
+      width: 52px;
+      text-align: center;
+      text-align-last: center;
+    }
+    .res-select:focus {
+      outline: 2px solid rgba(12,24,41,0.35);
+      outline-offset: 0;
     }
 
     /* ─── Last-result strip (injected row) ─────────────── */
@@ -668,12 +692,16 @@
     // Prevent browser from restoring a stale scroll position
     if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
 
+    /* ── Firebase ─────────────────────────────────── */
+    const DB   = 'https://popson-882f0-default-rtdb.asia-southeast1.firebasedatabase.app';
+    const SEED = { 0:'RCB', 1:'MI', 2:'RR', 3:'PBKS' };
+
     /* ── Rankings ─────────────────────────────────── */
     const POP = {MI:1,RCB:2,GT:3,DC:4,RR:5,SRH:6,PBKS:7,LSG:8,CSK:9,KKR:10};
     const SON = {MI:1,PBKS:2,RCB:3,GT:4,SRH:5,KKR:6,CSK:7,RR:8,DC:9,LSG:10};
 
-    /* ── Results (hardcoded Stage 2) ──────────────── */
-    const RESULTS = { 0:'RCB', 1:'MI', 2:'RR', 3:'PBKS' };
+    /* ── Mutable results — loaded from Firebase ────── */
+    let results = {};
 
     /* ── Fixtures [day, mon, time, A, B] ──────────── */
     const FIXTURES = [
@@ -776,6 +804,18 @@
       return { imp, popTeam, sonTeam };
     }
 
+    /* ── Scoreboard ───────────────────────────────── */
+    function updateScoreboard() {
+      let pop = 0, son = 0;
+      for (const [k, v] of Object.entries(results)) {
+        const [,,,a,b] = FIXTURES[+k];
+        const { imp, popTeam } = computeMatch(a, b);
+        if (v === popTeam) pop += imp; else son += imp;
+      }
+      document.getElementById('sb-pop').textContent = pop;
+      document.getElementById('sb-son').textContent = son;
+    }
+
     /* ── Date helpers ─────────────────────────────── */
     const MON = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
     const DOW  = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -793,30 +833,75 @@
       return `<span class="vbadge ${cls}">${v}</span>`;
     }
 
-    /* ── Compute scores ───────────────────────────── */
-    let popScore = 0, sonScore = 0;
-    Object.entries(RESULTS).forEach(([idx, winner]) => {
-      const [,,,a,b] = FIXTURES[+idx];
-      const { imp, popTeam } = computeMatch(a, b);
-      if (winner === popTeam) popScore += imp; else sonScore += imp;
-    });
-    document.getElementById('sb-pop').textContent = popScore;
-    document.getElementById('sb-son').textContent = sonScore;
+    /* ── Derived state ────────────────────────────── */
+    function getLastIdx() {
+      const keys = Object.keys(results).map(Number);
+      return keys.length ? Math.max(...keys) : -1;
+    }
+    function getNextIdx() {
+      return FIXTURES.findIndex((_, i) => results[i] === undefined);
+    }
 
-    /* ── Derived indices ──────────────────────────── */
-    const lastIdx = Math.max(...Object.keys(RESULTS).map(Number));
-    const nextIdx = FIXTURES.findIndex((_, i) => !(i in RESULTS));
+    /* ── Result cell helpers ──────────────────────── */
+    function showDropdown(td, idx, a, b, current) {
+      td.innerHTML = '';
+      const sel = document.createElement('select');
+      sel.className = 'res-select';
+      for (const [val, label] of [['', '—'], [a, a], [b, b]]) {
+        const opt = document.createElement('option');
+        opt.value = val;
+        opt.textContent = label;
+        if (val === current) opt.selected = true;
+        sel.appendChild(opt);
+      }
+      sel.addEventListener('change', () => writeResult(idx, sel.value || null));
+      td.appendChild(sel);
+    }
+
+    function renderResultCell(td, idx, a, b, isPast, isToday) {
+      const winner = results[idx];
+      td.innerHTML = '';
+      if (winner !== undefined) {
+        const { imp, popTeam } = computeMatch(a, b);
+        const isPop = winner === popTeam;
+        const img = document.createElement('img');
+        img.src   = `assets/${isPop ? 'pop' : 'son'}-sm.png`;
+        img.className = 'result-avatar';
+        img.title = `${isPop ? 'Pop' : 'Son'} +${imp}`;
+        img.addEventListener('click', () => showDropdown(td, idx, a, b, winner));
+        td.appendChild(img);
+      } else if (isPast || isToday) {
+        showDropdown(td, idx, a, b, '');
+      } else {
+        td.textContent = '—';
+      }
+    }
+
+    /* ── Firebase write ───────────────────────────── */
+    async function writeResult(idx, team) {
+      try {
+        await fetch(`${DB}/results/${idx}.json`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(team)
+        });
+      } catch (e) {
+        console.error('Firebase write error:', e);
+      }
+      if (team) results[idx] = team; else delete results[idx];
+      updateScoreboard();
+      renderTable();
+    }
 
     /* ── Hero row ─────────────────────────────────── */
-    function createHeroRow() {
-      const [day, mon, time, a, b] = FIXTURES[nextIdx];
+    function createHeroRow(nxt) {
+      const [day, mon, time, a, b] = FIXTURES[nxt];
       const { imp, popTeam, sonTeam } = computeMatch(a, b);
       const dow  = getDow(day, mon);
       const dd   = String(day).padStart(2, '0');
       const vCls = imp <= 3 ? 'v-lo' : imp <= 6 ? 'v-md' : 'v-hi';
       const tr   = document.createElement('tr');
-      tr.id = 'hero-row';
-      tr.className = 'hero-row';
+      tr.id = 'hero-row'; tr.className = 'hero-row';
       tr.innerHTML =
         `<td colspan="6" class="hero-cell"><div class="hero-card">` +
           `<div class="hero-eyebrow">Next Match</div>` +
@@ -825,9 +910,7 @@
               `<span class="hero-badge t-${popTeam}">${popTeam}</span>` +
               `<div class="hero-owner">Pop</div>` +
             `</div>` +
-            `<div class="hero-mid">` +
-              `<span class="hero-imp ${vCls}">${imp}</span>` +
-            `</div>` +
+            `<div class="hero-mid"><span class="hero-imp ${vCls}">${imp}</span></div>` +
             `<div class="hero-team">` +
               `<span class="hero-badge t-${sonTeam}">${sonTeam}</span>` +
               `<div class="hero-owner">Son</div>` +
@@ -838,77 +921,109 @@
       return tr;
     }
 
-    /* ── Render fixture rows ──────────────────────── */
-    const now = new Date();
-    now.setHours(0, 0, 0, 0);
+    /* ── Table renderer ───────────────────────────── */
     const tbody = document.getElementById('tbody');
-    let lastResultRow = null; // captured during render, used for scroll
+    let lastResultRow = null;
 
-    FIXTURES.forEach(([day, mon, time, a, b], i) => {
-      const { imp, popTeam, sonTeam } = computeMatch(a, b);
-      const mDate = getDate(day, mon);
-      mDate.setHours(0, 0, 0, 0);
-      const isToday = mDate.getTime() === now.getTime();
-      const winner  = RESULTS[i];
+    function renderTable() {
+      tbody.innerHTML = '';
+      lastResultRow = null;
+      const lastIdx = getLastIdx();
+      const nextIdx = getNextIdx();
+      const now = new Date();
+      now.setHours(0, 0, 0, 0);
 
-      let res;
-      if (winner !== undefined) {
-        const winnerIsPop = winner === popTeam;
-        res = `<img src="assets/${winnerIsPop ? 'pop' : 'son'}-sm.png"` +
-              ` class="result-avatar" title="${winnerIsPop ? 'Pop' : 'Son'} +${imp}">`;
-      } else if (isToday) {
-        res = `<span class="today-dot" title="Today"></span>`;
-      } else {
-        res = '—';
-      }
+      FIXTURES.forEach(([day, mon, time, a, b], i) => {
+        const { imp, popTeam, sonTeam } = computeMatch(a, b);
+        const mDate = getDate(day, mon);
+        mDate.setHours(0, 0, 0, 0);
+        const isPast  = mDate < now;
+        const isToday = mDate.getTime() === now.getTime();
 
-      const dow = getDow(day, mon);
-      const dd  = String(day).padStart(2, '0');
-      const tr  = document.createElement('tr');
-      if (isToday) tr.classList.add('row-today');
+        const dow = getDow(day, mon);
+        const dd  = String(day).padStart(2, '0');
+        const tr  = document.createElement('tr');
+        if (isToday) tr.classList.add('row-today');
 
-      tr.innerHTML =
-        `<td class="c-num">${i + 1}</td>` +
-        `<td class="c-date">` +
-          `<span class="d-day">${dow}</span>` +
-          `<span class="d-rest"> ${dd} ${mon}</span>` +
-          ` <span class="d-time">${to12h(time)}</span>` +
-        `</td>` +
-        `<td class="c-pop">${tbadge(popTeam)}</td>` +
-        `<td class="c-son">${tbadge(sonTeam)}</td>` +
-        `<td class="c-val">${vbadge(imp)}</td>` +
-        `<td class="c-res">${res}</td>`;
+        tr.innerHTML =
+          `<td class="c-num">${i + 1}</td>` +
+          `<td class="c-date">` +
+            `<span class="d-day">${dow}</span>` +
+            `<span class="d-rest"> ${dd} ${mon}</span>` +
+            ` <span class="d-time">${to12h(time)}</span>` +
+          `</td>` +
+          `<td class="c-pop">${tbadge(popTeam)}</td>` +
+          `<td class="c-son">${tbadge(sonTeam)}</td>` +
+          `<td class="c-val">${vbadge(imp)}</td>` +
+          `<td class="c-res"></td>`;
 
-      tbody.appendChild(tr);
-      if (RESULTS[i] !== undefined) lastResultRow = tr;
+        tbody.appendChild(tr);
+        renderResultCell(tr.querySelector('.c-res'), i, a, b, isPast, isToday);
+        if (results[i] !== undefined) lastResultRow = tr;
+        if (i === lastIdx && nextIdx !== -1) tbody.appendChild(createHeroRow(nextIdx));
+      });
+    }
 
-      // Inject hero row after last completed match
-      if (i === lastIdx) {
-        tbody.appendChild(createHeroRow());
-      }
-    });
-
-    /* ── Set thead offset + scroll to last completed match (after full load) ── */
-    // offsetDocTop walks offsetParent chain — correct regardless of current scrollY
+    /* ── Scroll helper ────────────────────────────── */
     function offsetDocTop(el) {
       let t = 0;
       while (el) { t += el.offsetTop; el = el.offsetParent; }
       return t;
     }
 
-    window.addEventListener('load', function () {
+    function scrollToLastResult() {
+      if (!lastResultRow) return;
       const scoreBar = document.querySelector('.score-bar');
       const theadEl  = document.querySelector('thead');
       const sbH = scoreBar ? scoreBar.offsetHeight : 0;
       const thH = theadEl  ? theadEl.offsetHeight  : 0;
+      window.scrollTo({ top: Math.max(0, offsetDocTop(lastResultRow) - sbH - thH), behavior: 'instant' });
+    }
 
-      if (theadEl) theadEl.style.top = sbH + 'px';
-
-      if (lastResultRow) {
-        const targetY = offsetDocTop(lastResultRow) - sbH - thH;
-        window.scrollTo({ top: Math.max(0, targetY), behavior: 'instant' });
-      }
+    /* ── Sticky thead offset (set after fonts + images load) ── */
+    window.addEventListener('load', () => {
+      const scoreBar = document.querySelector('.score-bar');
+      const theadEl  = document.querySelector('thead');
+      if (scoreBar && theadEl) theadEl.style.top = scoreBar.offsetHeight + 'px';
     });
+
+    /* ── App init ─────────────────────────────────── */
+    async function init() {
+      let fbData = null;
+      try {
+        const resp = await fetch(`${DB}/results.json`);
+        fbData = await resp.json();
+      } catch (e) {
+        console.error('Firebase read error:', e);
+        fbData = SEED; // offline fallback
+      }
+
+      if (!fbData) {
+        // First run — seed the known results
+        try {
+          await fetch(`${DB}/results.json`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(SEED)
+          });
+        } catch (e) {
+          console.error('Firebase seed error:', e);
+        }
+        fbData = SEED;
+      }
+
+      // Normalise Firebase string keys → numbers
+      results = {};
+      for (const [k, v] of Object.entries(fbData)) {
+        if (v) results[+k] = v;
+      }
+
+      updateScoreboard();
+      renderTable();
+      requestAnimationFrame(scrollToLastResult);
+    }
+
+    init();
   </script>
 </body>
 </html>
