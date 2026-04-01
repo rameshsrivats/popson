@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PopSon · IPL 2026</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap" rel="stylesheet">
+
+  <style>
+    /* ─── Reset & Base ─────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy:    #0C1829;
+      --navy-2:  #152340;
+      --navy-3:  #1e3060;
+      --gold:    #E8A030;
+      --gold-dim:#a06a18;
+      --bg:      #F2F0EB;
+      --surface: #FFFFFF;
+      --border:  #E0DDD5;
+      --border-2:#CCCAC0;
+      --text:    #181820;
+      --text-2:  #5C5B6A;
+      --text-3:  #A09FA8;
+      --today-bg:#FFFBEB;
+    }
+
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ─── Masthead ─────────────────────────────────────── */
+    .masthead {
+      background: var(--navy);
+      background-image:
+        radial-gradient(ellipse 60% 80% at 20% 60%, rgba(232,160,48,0.10) 0%, transparent 70%),
+        radial-gradient(ellipse 60% 80% at 80% 40%, rgba(40,80,200,0.14) 0%, transparent 70%),
+        repeating-linear-gradient(
+          -55deg,
+          transparent 0px, transparent 18px,
+          rgba(255,255,255,0.018) 18px, rgba(255,255,255,0.018) 19px
+        );
+      color: #fff;
+      padding: 28px 20px 26px;
+      text-align: center;
+      position: relative;
+    }
+
+    .season-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--gold);
+      border: 1px solid rgba(232,160,48,0.35);
+      border-radius: 20px;
+      padding: 4px 12px;
+      margin-bottom: 22px;
+    }
+    .season-pill::before,
+    .season-pill::after {
+      content: '●';
+      font-size: 5px;
+      opacity: 0.5;
+    }
+
+    /* Players */
+    .players-row {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      margin-bottom: 18px;
+    }
+
+    .player {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 7px;
+      padding: 0 14px;
+    }
+
+    .avatar-wrap {
+      position: relative;
+      width: 72px;
+      height: 72px;
+    }
+
+    .avatar-wrap::before {
+      content: '';
+      position: absolute;
+      inset: -3px;
+      border-radius: 50%;
+      background: conic-gradient(
+        var(--gold) 0deg,
+        transparent 90deg,
+        rgba(232,160,48,0.3) 180deg,
+        transparent 270deg,
+        var(--gold) 360deg
+      );
+      opacity: 0.5;
+    }
+
+    .avatar-wrap img {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+      background: var(--navy-2);
+      border: 2.5px solid rgba(255,255,255,0.12);
+      display: block;
+    }
+
+    .player-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.45);
+    }
+
+    .player-name {
+      font-size: 13px;
+      font-weight: 500;
+      color: rgba(255,255,255,0.7);
+      margin-top: -4px;
+    }
+
+    .vs-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-bottom: 46px;
+      gap: 3px;
+    }
+    .vs-line {
+      width: 1px;
+      height: 16px;
+      background: rgba(255,255,255,0.1);
+    }
+    .vs-text {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      color: rgba(255,255,255,0.18);
+    }
+
+    /* Brand name */
+    .brand {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(56px, 15vw, 88px);
+      letter-spacing: 0.06em;
+      line-height: 0.88;
+      color: #fff;
+      margin-bottom: 7px;
+    }
+
+    .brand-rule {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .brand-rule span {
+      flex: 1;
+      max-width: 60px;
+      height: 1px;
+      background: rgba(232,160,48,0.35);
+    }
+    .brand-tagline {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.3);
+    }
+
+    /* ─── Centered content wrapper ────────────────────── */
+    .content {
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    /* ─── Legend bar ───────────────────────────────────── */
+    .legend {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 6px 16px;
+      padding: 9px 20px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .legend-head {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-3);
+    }
+
+    .legend-sep { width: 1px; height: 14px; background: var(--border); }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      color: var(--text-2);
+    }
+
+    .l-chip {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      border-radius: 5px;
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    /* ─── Table wrapper ────────────────────────────────── */
+    .table-outer {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      background: var(--surface);
+    }
+
+    /* ─── Table ────────────────────────────────────────── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 380px;
+    }
+
+    /* Sticky header */
+    thead { position: sticky; top: 0; z-index: 10; }
+
+    thead tr { background: #EDECEA; }
+
+    th {
+      padding: 8px 10px;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+      color: var(--text-3);
+      text-align: left;
+      border-bottom: 2px solid var(--border-2);
+      white-space: nowrap;
+      user-select: none;
+    }
+
+    th.c-num { text-align: center; width: 36px; padding: 8px 4px; }
+    th.c-pop,
+    th.c-son { text-align: center; width: 1%; white-space: nowrap; }
+    th.c-val { text-align: center; width: 52px; }
+    th.c-res { text-align: center; width: 58px; }
+
+    /* Avatar in th */
+    .th-player {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .th-avatar {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: var(--bg);
+      vertical-align: middle;
+      border: 1px solid var(--border-2);
+    }
+
+    /* Body rows */
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background 80ms;
+    }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: #F5F3EE; }
+
+    tbody tr.row-past { opacity: 0.52; }
+    tbody tr.row-past:hover { opacity: 0.7; }
+
+    tbody tr.row-today { background: var(--today-bg); }
+    tbody tr.row-today:hover { background: #FFF6D5; }
+
+    td {
+      padding: 9px 10px;
+      vertical-align: middle;
+      font-size: 14px;
+    }
+
+    td.c-num {
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-2);
+      width: 36px;
+      padding: 9px 4px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Today indicator replaces row number */
+    tr.row-today td.c-num {
+      color: #D97706;
+      font-weight: 700;
+    }
+
+    td.c-date { white-space: nowrap; }
+
+    .d-day  { font-size: 14px; font-weight: 700; color: var(--text); }
+    .d-rest { font-size: 14px; color: var(--text); }
+    .d-time { font-size: 14px; color: var(--text-2); font-variant-numeric: tabular-nums; }
+
+    td.c-pop,
+    td.c-son { text-align: center; padding-left: 6px; padding-right: 6px; }
+
+    td.c-val { text-align: center; }
+
+    td.c-res {
+      text-align: center;
+      color: var(--text-2);
+      font-size: 15px;
+    }
+
+    /* Today pulse dot in result */
+    .today-dot {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #F59E0B;
+      animation: pulse 2s ease-in-out infinite;
+      vertical-align: middle;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1;   transform: scale(1);   }
+      50%       { opacity: 0.4; transform: scale(1.35); }
+    }
+
+    /* ─── Team badges ──────────────────────────────────── */
+    .tbadge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 52px;
+      padding: 3px 0;
+      border-radius: 5px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+      line-height: 1.5;
+    }
+
+    /* ─── Value badges ─────────────────────────────────── */
+    .vbadge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 30px;
+      height: 28px;
+      border-radius: 7px;
+      font-size: 14px;
+      font-weight: 700;
+      padding: 0 5px;
+    }
+    .v-lo { background: #D1FAE5; color: #065F46; }
+    .v-md { background: #FEF3C7; color: #92400E; }
+    .v-hi { background: #FEE2E2; color: #991B1B; }
+
+    /* ─── Team colors ──────────────────────────────────── */
+    .t-MI   { background: #004BA0; color: #fff; }
+    .t-CSK  { background: #FFCB05; color: #1a1a1a; }
+    .t-RCB  { background: #EC1C24; color: #fff; }
+    .t-KKR  { background: #3A225D; color: #fff; }
+    .t-SRH  { background: #FF822A; color: #fff; }
+    .t-RR   { background: #EA1A85; color: #fff; }
+    .t-DC   { background: #004C93; color: #fff; }
+    .t-PBKS { background: #DD1F2D; color: #fff; }
+    .t-GT   { background: #0B4973; color: #fff; }
+    .t-LSG  { background: #A72056; color: #fff; }
+
+    /* ─── Footer ───────────────────────────────────────── */
+    .footer {
+      text-align: center;
+      padding: 18px 20px;
+      font-size: 11px;
+      color: var(--text-3);
+      letter-spacing: 0.05em;
+      border-top: 1px solid var(--border);
+    }
+
+    /* ─── Responsive ───────────────────────────────────── */
+    @media (max-width: 480px) {
+      .masthead { padding: 22px 14px 20px; }
+      .avatar-wrap { width: 58px; height: 58px; }
+      .player { padding: 0 10px; }
+      .player-name { display: none; }
+      .brand { font-size: 54px; }
+
+      th, td { padding: 8px 7px; }
+      th.c-num, td.c-num { padding: 8px 4px; width: 28px; }
+      .tbadge { font-size: 10px; padding: 2px 6px; }
+      .vbadge { min-width: 24px; height: 24px; font-size: 11px; }
+      .d-day, .d-rest { font-size: 11px; }
+      .d-time { font-size: 10px; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ── Masthead ──────────────────────────────────── -->
+  <header class="masthead">
+    <div class="season-pill">IPL 2026</div>
+
+    <div class="players-row">
+      <div class="player">
+        <div class="avatar-wrap">
+          <img src="assets/pop-lg.png" alt="Ramesh">
+        </div>
+        <div class="player-label">Pop</div>
+        <div class="player-name">Ramesh</div>
+      </div>
+
+      <div class="vs-col">
+        <div class="vs-line"></div>
+        <div class="vs-text">VS</div>
+        <div class="vs-line"></div>
+      </div>
+
+      <div class="player">
+        <div class="avatar-wrap">
+          <img src="assets/son-lg.png" alt="Anmol">
+        </div>
+        <div class="player-label">Son</div>
+        <div class="player-name">Anmol</div>
+      </div>
+    </div>
+
+    <div class="brand">PopSon</div>
+    <div class="brand-rule">
+      <span></span>
+      <div class="brand-tagline">Prediction Battle</div>
+      <span></span>
+    </div>
+  </header>
+
+  <div class="content">
+<!-- ── Fixtures ───────────────────────────────────── -->
+  <div class="table-outer">
+    <table>
+      <thead>
+        <tr>
+          <th class="c-num">#</th>
+          <th class="c-date">Date</th>
+          <th class="c-pop">
+            <span class="th-player">
+              <img src="assets/pop-sm.png" alt="" class="th-avatar">Pop
+            </span>
+          </th>
+          <th class="c-son">
+            <span class="th-player">
+              <img src="assets/son-sm.png" alt="" class="th-avatar">Son
+            </span>
+          </th>
+          <th class="c-val">Value</th>
+          <th class="c-res">Result</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <footer class="footer">70 league fixtures &nbsp;·&nbsp; All times IST</footer>
+  </div><!-- /.content -->
+
+  <script>
+    'use strict';
+
+    /* ── Rankings ─────────────────────────────────── */
+    const POP = {MI:1,RCB:2,GT:3,DC:4,RR:5,SRH:6,PBKS:7,LSG:8,CSK:9,KKR:10};
+    const SON = {MI:1,PBKS:2,RCB:3,GT:4,SRH:5,KKR:6,CSK:7,RR:8,DC:9,LSG:10};
+
+    /* ── Fixtures [day, mon, time, A, B] ──────────── */
+    const FIXTURES = [
+      [28,'Mar','19:30','RCB','SRH'],
+      [29,'Mar','19:30','MI','KKR'],
+      [30,'Mar','19:30','RR','CSK'],
+      [31,'Mar','19:30','PBKS','GT'],
+      [ 1,'Apr','19:30','LSG','DC'],
+      [ 2,'Apr','19:30','KKR','SRH'],
+      [ 3,'Apr','19:30','CSK','PBKS'],
+      [ 4,'Apr','15:30','DC','MI'],
+      [ 4,'Apr','19:30','GT','RR'],
+      [ 5,'Apr','15:30','SRH','LSG'],
+      [ 5,'Apr','19:30','RCB','CSK'],
+      [ 6,'Apr','19:30','KKR','PBKS'],
+      [ 7,'Apr','19:30','RR','MI'],
+      [ 8,'Apr','19:30','DC','GT'],
+      [ 9,'Apr','19:30','KKR','LSG'],
+      [10,'Apr','19:30','RR','RCB'],
+      [11,'Apr','15:30','PBKS','SRH'],
+      [11,'Apr','19:30','CSK','DC'],
+      [12,'Apr','15:30','LSG','GT'],
+      [12,'Apr','19:30','MI','RCB'],
+      [13,'Apr','19:30','SRH','RR'],
+      [14,'Apr','19:30','CSK','KKR'],
+      [15,'Apr','19:30','RCB','LSG'],
+      [16,'Apr','19:30','MI','PBKS'],
+      [17,'Apr','19:30','GT','KKR'],
+      [18,'Apr','15:30','RCB','DC'],
+      [18,'Apr','19:30','SRH','CSK'],
+      [19,'Apr','15:30','KKR','RR'],
+      [19,'Apr','19:30','PBKS','LSG'],
+      [20,'Apr','19:30','GT','MI'],
+      [21,'Apr','19:30','SRH','DC'],
+      [22,'Apr','19:30','LSG','RR'],
+      [23,'Apr','19:30','MI','CSK'],
+      [24,'Apr','19:30','RCB','GT'],
+      [25,'Apr','15:30','DC','PBKS'],
+      [25,'Apr','19:30','RR','SRH'],
+      [26,'Apr','15:30','GT','CSK'],
+      [26,'Apr','19:30','LSG','KKR'],
+      [27,'Apr','19:30','DC','RCB'],
+      [28,'Apr','19:30','PBKS','RR'],
+      [29,'Apr','19:30','MI','SRH'],
+      [30,'Apr','19:30','GT','RCB'],
+      [ 1,'May','19:30','RR','DC'],
+      [ 2,'May','19:30','CSK','MI'],
+      [ 3,'May','15:30','SRH','KKR'],
+      [ 3,'May','19:30','GT','PBKS'],
+      [ 4,'May','19:30','MI','LSG'],
+      [ 5,'May','19:30','DC','CSK'],
+      [ 6,'May','19:30','SRH','PBKS'],
+      [ 7,'May','19:30','LSG','RCB'],
+      [ 8,'May','19:30','DC','KKR'],
+      [ 9,'May','19:30','RR','GT'],
+      [10,'May','15:30','CSK','LSG'],
+      [10,'May','19:30','RCB','MI'],
+      [11,'May','19:30','PBKS','DC'],
+      [12,'May','19:30','GT','SRH'],
+      [13,'May','19:30','RCB','KKR'],
+      [14,'May','19:30','PBKS','MI'],
+      [15,'May','19:30','LSG','CSK'],
+      [16,'May','19:30','KKR','GT'],
+      [17,'May','15:30','PBKS','RCB'],
+      [17,'May','19:30','DC','RR'],
+      [18,'May','19:30','CSK','SRH'],
+      [19,'May','19:30','RR','LSG'],
+      [20,'May','19:30','KKR','MI'],
+      [21,'May','19:30','CSK','GT'],
+      [22,'May','19:30','SRH','RCB'],
+      [23,'May','19:30','LSG','PBKS'],
+      [24,'May','15:30','MI','RR'],
+      [24,'May','19:30','KKR','DC'],
+    ];
+
+    /* ── Scoring engine ───────────────────────────── */
+    function computeMatch(a, b) {
+      const pA = POP[a], pB = POP[b];
+      const sA = SON[a], sB = SON[b];
+
+      const popPick = pA < pB ? a : b;
+      const sonPick = sA < sB ? a : b;
+      const pDiff   = Math.abs(pA - pB);
+      const sDiff   = Math.abs(sA - sB);
+
+      let imp, popTeam, sonTeam;
+
+      if (popPick !== sonPick) {
+        // Case 1 — opposite predictions
+        imp     = pDiff + sDiff + 1;
+        popTeam = popPick;
+        sonTeam = sonPick;
+      } else {
+        const fav = popPick;
+        const und = fav === a ? b : a;
+
+        if (pDiff !== sDiff) {
+          // Case 2 — same prediction, different diffs
+          imp     = Math.abs(pDiff - sDiff) + 1;
+          popTeam = pDiff > sDiff ? fav : und;
+          sonTeam = pDiff > sDiff ? und : fav;
+        } else {
+          // Case 3 — same prediction, same diff (tiebreaker)
+          imp     = 1;
+          const popHasFav = POP[fav] < SON[fav];
+          popTeam = popHasFav ? fav : und;
+          sonTeam = popHasFav ? und : fav;
+        }
+      }
+
+      return { imp, popTeam, sonTeam };
+    }
+
+    /* ── Date helpers ─────────────────────────────── */
+    const MON = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+    const DOW  = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+    function getDate(day, mon) { return new Date(2026, MON[mon], day); }
+    function getDow(day, mon)  { return DOW[getDate(day, mon).getDay()]; }
+
+    function to12h(t) {
+      const [h, m] = t.split(':').map(Number);
+      return `${h % 12 || 12}:${String(m).padStart(2, '0')}${h >= 12 ? 'pm' : 'am'}`;
+    }
+
+    /* ── Badge helpers ────────────────────────────── */
+    function tbadge(t) {
+      return `<span class="tbadge t-${t}">${t}</span>`;
+    }
+
+    function vbadge(v) {
+      const cls = v <= 3 ? 'v-lo' : v <= 6 ? 'v-md' : 'v-hi';
+      return `<span class="vbadge ${cls}">${v}</span>`;
+    }
+
+    /* ── Render ───────────────────────────────────── */
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+
+    const tbody = document.getElementById('tbody');
+
+    FIXTURES.forEach(([day, mon, time, a, b], i) => {
+      const { imp, popTeam, sonTeam } = computeMatch(a, b);
+
+      const mDate = getDate(day, mon);
+      mDate.setHours(0, 0, 0, 0);
+      const isToday = mDate.getTime() === now.getTime();
+      const isPast  = mDate < now;
+
+      const dow  = getDow(day, mon);
+      const dd   = String(day).padStart(2, '0');
+      const res  = isToday
+        ? `<span class="today-dot" title="Today"></span>`
+        : '—';
+
+      const tr = document.createElement('tr');
+      if (isToday) tr.classList.add('row-today');
+      else if (isPast) tr.classList.add('row-past');
+
+      tr.innerHTML =
+        `<td class="c-num">${i + 1}</td>` +
+        `<td class="c-date">` +
+          `<span class="d-day">${dow}</span>` +
+          `<span class="d-rest"> ${dd} ${mon}</span>` +
+          ` <span class="d-time">${to12h(time)}</span>` +
+        `</td>` +
+        `<td class="c-pop">${tbadge(popTeam)}</td>` +
+        `<td class="c-son">${tbadge(sonTeam)}</td>` +
+        `<td class="c-val">${vbadge(imp)}</td>` +
+        `<td class="c-res">${res}</td>`;
+
+      tbody.appendChild(tr);
+    });
+  </script>
+</body>
+</html>
