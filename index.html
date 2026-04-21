@@ -656,12 +656,23 @@
       .sb-rank  { font-size: 9px; }
       .sb-preal { display: none; }
 
-      th, td { padding: 8px 7px; }
-      th.c-num, td.c-num { padding: 8px 4px; width: 28px; }
-      .tbadge { font-size: 10px; padding: 2px 6px; }
-      .vbadge { min-width: 24px; height: 24px; font-size: 11px; }
-      .d-day, .d-rest { font-size: 11px; }
-      .d-time { font-size: 10px; }
+      /* Fixture table */
+      table { min-width: 0; }
+      th, td { padding: 7px 5px; }
+      th.c-num, td.c-num { padding: 7px 2px; width: 22px; }
+      td.c-pop, td.c-son { padding-left: 3px; padding-right: 3px; }
+      td { font-size: 13px; }
+      .tbadge { font-size: 10px; padding: 2px 5px; width: auto; }
+      .vbadge { min-width: 22px; height: 22px; font-size: 11px; padding: 0 3px; }
+      .d-day, .d-rest { font-size: 12px; }
+      .d-time { display: none; }
+
+      /* Hero card */
+      .hero-card { padding: 20px 16px 16px; }
+      .hero-matchup { gap: 10px; margin-bottom: 14px; }
+      .hero-avatar { width: 38px; height: 38px; }
+      .hero-badge { font-size: 15px; padding: 10px 14px; border-radius: 8px; }
+      .hero-imp { width: 44px; height: 44px; font-size: 18px; }
     }
   </style>
 </head>
