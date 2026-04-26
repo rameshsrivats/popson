@@ -673,7 +673,128 @@
       .hero-avatar { width: 38px; height: 38px; }
       .hero-badge { font-size: 15px; padding: 10px 14px; border-radius: 8px; }
       .hero-imp { width: 44px; height: 44px; font-size: 18px; }
+
+      /* Race graph */
+      .race-svg { height: 160px; }
     }
+
+    /* ─── Race Nav Strip (own sticky strip, below column headers) */
+    .race-nav-strip {
+      position: sticky;
+      z-index: 9;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding: 5px 14px;
+    }
+    .race-nav-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-3);
+      text-decoration: none;
+      letter-spacing: 0.08em;
+      padding: 2px 7px;
+      border-radius: 4px;
+      transition: background 120ms, color 120ms;
+    }
+    .race-nav-link:hover {
+      background: var(--bg);
+      color: var(--text-2);
+    }
+
+    /* ─── Race Section ─────────────────────────────────── */
+    .race-section {
+      background: var(--surface);
+      border-top: 2px solid var(--border);
+      padding: 28px 0 40px;
+    }
+    .race-inner {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 0 16px;
+    }
+    .race-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+    .race-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 30px;
+      letter-spacing: 0.1em;
+      color: var(--navy);
+    }
+    .race-back-link {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-3);
+      text-decoration: none;
+      letter-spacing: 0.04em;
+      padding: 3px 8px;
+      border-radius: 5px;
+      transition: background 120ms, color 120ms;
+    }
+    .race-back-link:hover { background: var(--bg); color: var(--text-2); }
+    .race-chart-wrap {
+      position: relative;
+    }
+    .race-svg {
+      width: 100%;
+      height: 200px;
+      display: block;
+      overflow: visible;
+    }
+    .race-tooltip {
+      position: absolute;
+      background: var(--navy);
+      color: #fff;
+      padding: 7px 11px;
+      border-radius: 7px;
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 1.4;
+      pointer-events: none;
+      white-space: nowrap;
+      z-index: 20;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.22);
+    }
+    .race-tooltip[hidden] { display: none; }
+    .race-legend {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      margin-top: 14px;
+    }
+    .race-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-2);
+    }
+    .race-legend-avatar {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1.5px solid var(--border);
+    }
+    .race-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .race-dot-pop { background: #E8A030; }
+    .race-dot-son { background: #5B9BF8; }
   </style>
 </head>
 
@@ -751,6 +872,9 @@
   </div>
 
   <div class="content">
+    <div class="race-nav-strip">
+      <a href="#the-race" id="race-nav-link" class="race-nav-link">📊 The Race</a>
+    </div>
 <!-- ── Fixtures ───────────────────────────────────── -->
   <div class="table-outer">
     <table>
@@ -778,6 +902,31 @@
 
   <footer class="footer">70 league fixtures &nbsp;·&nbsp; All times IST</footer>
   </div><!-- /.content -->
+
+  <section id="the-race" class="race-section">
+    <div class="race-inner">
+      <div class="race-header">
+        <div class="race-title">THE RACE</div>
+        <a href="#" class="race-back-link" id="race-back-link">↑ Back to top</a>
+      </div>
+      <div class="race-chart-wrap">
+        <svg id="race-svg" class="race-svg" xmlns="http://www.w3.org/2000/svg"></svg>
+        <div id="race-tooltip" class="race-tooltip" hidden></div>
+      </div>
+      <div class="race-legend">
+        <div class="race-legend-item">
+          <span class="race-dot race-dot-pop"></span>
+          <img src="assets/pop-sm.png" alt="" class="race-legend-avatar">
+          Pop
+        </div>
+        <div class="race-legend-item">
+          <span class="race-dot race-dot-son"></span>
+          <img src="assets/son-sm.png" alt="" class="race-legend-avatar">
+          Son
+        </div>
+      </div>
+    </div>
+  </section>
 
   <script>
     'use strict';
@@ -908,6 +1057,7 @@
       }
       document.getElementById('sb-pop').textContent = pop;
       document.getElementById('sb-son').textContent = son;
+      renderGraph();
     }
 
     /* ── Date helpers ─────────────────────────────── */
@@ -1075,9 +1225,11 @@
       if (!lastResultRow) return;
       const scoreBar = document.querySelector('.score-bar');
       const theadEl  = document.querySelector('thead');
-      const sbH      = scoreBar ? scoreBar.offsetHeight : 0;
-      const thH      = theadEl  ? theadEl.offsetHeight  : 0;
-      const target   = Math.max(0, offsetDocTop(lastResultRow) - sbH - thH);
+      const navStrip = document.querySelector('.race-nav-strip');
+      const sbH      = scoreBar  ? scoreBar.offsetHeight  : 0;
+      const thH      = theadEl   ? theadEl.offsetHeight   : 0;
+      const navH     = navStrip  ? navStrip.offsetHeight  : 0;
+      const target   = Math.max(0, offsetDocTop(lastResultRow) - sbH - thH - navH);
       const start    = window.scrollY;
       const distance = target - start;
       const duration = 1000;
@@ -1095,12 +1247,145 @@
       requestAnimationFrame(step);
     }
 
-    /* ── Sticky thead offset (set after fonts + images load) ── */
+    /* ── Sticky offsets (set after fonts + images load) ────── */
     window.addEventListener('load', () => {
       const scoreBar = document.querySelector('.score-bar');
       const theadEl  = document.querySelector('thead');
-      if (scoreBar && theadEl) theadEl.style.top = scoreBar.offsetHeight + 'px';
+      const navStrip = document.querySelector('.race-nav-strip');
+      if (scoreBar && theadEl) {
+        const sbH = scoreBar.offsetHeight;
+        const thH = theadEl.offsetHeight;
+        theadEl.style.top = sbH + 'px';
+        if (navStrip) navStrip.style.top = (sbH + thH) + 'px';
+      }
     });
+
+    /* ── Graph ────────────────────────────────────────── */
+    const POP_C = '#E8A030', SON_C = '#5B9BF8';
+    const GR_W = 1000, GR_H = 200;
+    const GP = { t: 20, r: 24, b: 10, l: 44 };
+
+    function getCumulativeData() {
+      const data = [];
+      let pT = 0, sT = 0;
+      FIXTURES.forEach(([,,,a,b], i) => {
+        if (results[i] === undefined) return;
+        const { imp, popTeam } = computeMatch(a, b);
+        const w = results[i];
+        let pG = 0, sG = 0;
+        if (w !== 'NR') { if (w === popTeam) pG = imp; else sG = imp; }
+        pT += pG; sT += sG;
+        data.push({ matchNum: i + 1, popTotal: pT, sonTotal: sT, popGain: pG, sonGain: sG, winner: w });
+      });
+      return data;
+    }
+
+    function renderGraph() {
+      const svg = document.getElementById('race-svg');
+      if (!svg) return;
+      const data = getCumulativeData();
+      const NS = 'http://www.w3.org/2000/svg';
+      function mk(tag, attrs) {
+        const e = document.createElementNS(NS, tag);
+        for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+        return e;
+      }
+      svg.setAttribute('viewBox', `0 0 ${GR_W} ${GR_H}`);
+      svg.innerHTML = '';
+
+      if (data.length === 0) {
+        const t = mk('text', { x: GR_W / 2, y: GR_H / 2, 'text-anchor': 'middle', 'dominant-baseline': 'middle', fill: '#A09FA8', 'font-size': '14', 'font-family': 'DM Sans,system-ui,sans-serif' });
+        t.textContent = 'No completed matches yet';
+        svg.appendChild(t);
+        return;
+      }
+
+      const iW = GR_W - GP.l - GP.r;
+      const iH = GR_H - GP.t - GP.b;
+      const n  = data.length;
+      const mx = Math.max(...data.map(d => Math.max(d.popTotal, d.sonTotal)), 10);
+      function xOf(i) { return n === 1 ? GP.l + iW / 2 : GP.l + (i / (n - 1)) * iW; }
+      function yOf(v) { return GP.t + iH * (1 - v / mx); }
+
+      // Light grid lines + Y-axis labels
+      [1, 2, 3, 4].forEach(g => {
+        const v = Math.round(mx * g / 4), y = yOf(v);
+        svg.appendChild(mk('line', { x1: GP.l, x2: GR_W - GP.r, y1: y, y2: y, stroke: 'rgba(0,0,0,0.05)', 'stroke-width': '1' }));
+        const lbl = mk('text', { x: GP.l - 6, y, 'text-anchor': 'end', 'dominant-baseline': 'middle', fill: '#A09FA8', 'font-size': '11', 'font-family': 'DM Sans,system-ui,sans-serif' });
+        lbl.textContent = v;
+        svg.appendChild(lbl);
+      });
+      svg.appendChild(mk('line', { x1: GP.l, x2: GR_W - GP.r, y1: yOf(0), y2: yOf(0), stroke: 'rgba(0,0,0,0.12)', 'stroke-width': '1' }));
+
+      function buildD(key) {
+        return data.map((d, i) => `${i ? 'L' : 'M'}${xOf(i).toFixed(1)},${yOf(d[key]).toFixed(1)}`).join('');
+      }
+
+      function drawSeries(key, color) {
+        const areaD = buildD(key) + ` L${xOf(n - 1).toFixed(1)},${yOf(0).toFixed(1)} L${xOf(0).toFixed(1)},${yOf(0).toFixed(1)}Z`;
+        svg.appendChild(mk('path', { d: areaD, fill: color, 'fill-opacity': '0.07' }));
+        svg.appendChild(mk('path', { d: buildD(key), fill: 'none', stroke: color, 'stroke-width': '2.5', 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }));
+        data.forEach((d, i) => svg.appendChild(mk('circle', { cx: xOf(i), cy: yOf(d[key]), r: '3.5', fill: color, stroke: '#fff', 'stroke-width': '1.5' })));
+      }
+
+      drawSeries('sonTotal', SON_C);
+      drawSeries('popTotal', POP_C);
+
+      // Hover infrastructure
+      const vLine = mk('line', { x1: 0, x2: 0, y1: GP.t, y2: yOf(0), stroke: 'rgba(0,0,0,0.18)', 'stroke-width': '1', 'stroke-dasharray': '3,2' });
+      vLine.style.display = 'none'; svg.appendChild(vLine);
+      const hPop = mk('circle', { r: '5.5', fill: POP_C, stroke: '#fff', 'stroke-width': '2' });
+      hPop.style.display = 'none'; svg.appendChild(hPop);
+      const hSon = mk('circle', { r: '5.5', fill: SON_C, stroke: '#fff', 'stroke-width': '2' });
+      hSon.style.display = 'none'; svg.appendChild(hSon);
+      const hitRect = mk('rect', { x: GP.l, y: GP.t, width: iW, height: iH, fill: 'transparent' });
+      hitRect.style.cursor = 'crosshair'; svg.appendChild(hitRect);
+
+      const tip  = document.getElementById('race-tooltip');
+      const wrap = svg.parentElement;
+
+      function svgXOf(cX) {
+        const r = svg.getBoundingClientRect();
+        return r.width > 0 ? ((cX - r.left) / r.width) * GR_W : GR_W / 2;
+      }
+      function nearestIdx(sx) {
+        let idx = 0, best = Infinity;
+        data.forEach((d, i) => { const dist = Math.abs(xOf(i) - sx); if (dist < best) { best = dist; idx = i; } });
+        return idx;
+      }
+      function showTip(idx, cX, cY) {
+        const d = data[idx];
+        const gain = d.winner === 'NR' ? 'No Result' : (d.popGain > 0 ? `+${d.popGain} Pop` : `+${d.sonGain} Son`);
+        tip.textContent = `Match ${d.matchNum}: ${gain} | Total: ${d.popTotal}–${d.sonTotal}`;
+        tip.removeAttribute('hidden');
+        const wr = wrap.getBoundingClientRect();
+        const tw = tip.offsetWidth, th = tip.offsetHeight;
+        let tx = cX - wr.left - tw / 2;
+        let ty = cY - wr.top - th - 12;
+        tx = Math.max(4, Math.min(tx, wr.width - tw - 4));
+        if (ty < 4) ty = cY - wr.top + 16;
+        tip.style.left = tx + 'px';
+        tip.style.top  = ty + 'px';
+        vLine.setAttribute('x1', xOf(idx)); vLine.setAttribute('x2', xOf(idx));
+        vLine.style.display = '';
+        hPop.setAttribute('cx', xOf(idx)); hPop.setAttribute('cy', yOf(d.popTotal));
+        hPop.style.display = '';
+        hSon.setAttribute('cx', xOf(idx)); hSon.setAttribute('cy', yOf(d.sonTotal));
+        hSon.style.display = '';
+      }
+      function hideTip() {
+        tip.setAttribute('hidden', '');
+        vLine.style.display = 'none'; hPop.style.display = 'none'; hSon.style.display = 'none';
+      }
+
+      hitRect.addEventListener('mousemove', e => showTip(nearestIdx(svgXOf(e.clientX)), e.clientX, e.clientY));
+      hitRect.addEventListener('mouseleave', hideTip);
+      hitRect.addEventListener('touchend', e => {
+        const t = e.changedTouches[0];
+        showTip(nearestIdx(svgXOf(t.clientX)), t.clientX, t.clientY);
+        setTimeout(hideTip, 3000);
+      });
+    }
 
     /* ── App init ─────────────────────────────────── */
     async function init() {
@@ -1139,6 +1424,32 @@
     }
 
     init();
+
+    /* ── Nav scroll handlers ──────────────────────────── */
+    function smoothScrollTo(targetY) {
+      const start = window.scrollY, dist = targetY - start, dur = 700;
+      let t0 = null;
+      function ease(t) { return t < 0.5 ? 2*t*t : -1+(4-2*t)*t; }
+      function step(ts) {
+        if (!t0) t0 = ts;
+        const p = Math.min((ts - t0) / dur, 1);
+        window.scrollTo(0, start + dist * ease(p));
+        if (p < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }
+
+    document.getElementById('race-nav-link').addEventListener('click', e => {
+      e.preventDefault();
+      const sec = document.getElementById('the-race');
+      const sbH = document.querySelector('.score-bar')?.offsetHeight || 0;
+      smoothScrollTo(offsetDocTop(sec) - sbH - 8);
+    });
+
+    document.getElementById('race-back-link').addEventListener('click', e => {
+      e.preventDefault();
+      if (lastResultRow) scrollToLastResult(); else smoothScrollTo(0);
+    });
   </script>
 </body>
 </html>
