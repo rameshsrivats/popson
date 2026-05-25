@@ -1243,7 +1243,9 @@
       const popPct = (popWins / total) * 100;
       const sonPct = (sonWins / total) * 100;
       const tiePct = (ties / total) * 100;
-      function fmt(p) { return parseFloat(p.toFixed(2)) + '%'; }
+      function decimals(p) { var s = parseFloat(p.toFixed(2)).toString(), i = s.indexOf('.'); return i < 0 ? 0 : s.length - i - 1; }
+      var maxDec = Math.max(decimals(popPct), decimals(sonPct), decimals(tiePct));
+      function fmt(p) { return p.toFixed(maxDec) + '%'; }
       tow.innerHTML = ''; copy.textContent = '';
 
       function bar(segs, labels) {
