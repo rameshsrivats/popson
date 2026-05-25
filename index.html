@@ -1260,13 +1260,26 @@
         tow.innerHTML = s + '<div class="sb-tow-labels">' + l + '</div>';
       }
 
+      function tieCopy() {
+        if (!tieTeams) return;
+        var keys = ['Q1', 'EL', 'Q2', 'F'];
+        var undecided = tieTeams.filter(function(t, i) { return !results[keys[i]]; });
+        if (undecided.length === 0) return;
+        var list;
+        if (undecided.length === 1) {
+          list = undecided[0] + " wins";
+        } else {
+          list = undecided.slice(0, -1).join(", ") + " & " + undecided[undecided.length - 1] + " win";
+        }
+        copy.textContent = "Wow! If " + list + ", it's a " + tieScore + "-all tie!";
+      }
+
       if (total === 1) {
         if (ties === 1) {
           bar([['100%','#f97316']], [['100%',"It's a tie!"]]);
-        } else if (popWins > 0) {
-          bar([['100%','#22c55e']], [['100%','Pop wins! 🏆']]);
         } else {
-          bar([['100%','#ef4444']], [['100%','Son wins! 🏆']]);
+          var w = popWins > 0 ? 'Pop' : 'Son';
+          bar([['100%','#22c55e']], [['100%', w + ' wins! \u{1F3C6}']]);
         }
         return;
       }
@@ -1277,20 +1290,23 @@
         return;
       }
       if (popWins === sonWins) {
-        bar([[popPct+'%','#f97316'],[tiePct+'%','#C8960C'],[sonPct+'%','#f97316']],
-            [[popPct+'%',fmt(popPct)],[tiePct+'%',fmt(tiePct)],[sonPct+'%',fmt(sonPct)]]);
-        if (tieTeams) copy.textContent = "Wow! If " + tieTeams[0] + ", " + tieTeams[1] + ", " + tieTeams[2] + " & " + tieTeams[3] + " win, it's a " + tieScore + "-all tie!";
+        var segs = [], lbls = [];
+        if (popPct > 0) { segs.push([popPct+'%','#f97316']); lbls.push([popPct+'%',fmt(popPct)]); }
+        if (tiePct > 0) { segs.push([tiePct+'%','#C8960C']); lbls.push([tiePct+'%',fmt(tiePct)]); }
+        if (sonPct > 0) { segs.push([sonPct+'%','#f97316']); lbls.push([sonPct+'%',fmt(sonPct)]); }
+        bar(segs, lbls);
+        tieCopy();
         return;
       }
       var popLeads = popWins > sonWins;
       var greenPct = popLeads ? popPct : sonPct;
       var redPct = popLeads ? sonPct : popPct;
-      var segs = [[greenPct+'%','#22c55e']];
-      var lbls = [[greenPct+'%',fmt(greenPct)]];
+      var segs = [], lbls = [];
+      if (greenPct > 0) { segs.push([greenPct+'%','#22c55e']); lbls.push([greenPct+'%',fmt(greenPct)]); }
       if (tiePct > 0) { segs.push([tiePct+'%','#C8960C']); lbls.push([tiePct+'%',fmt(tiePct)]); }
-      segs.push([redPct+'%','#ef4444']); lbls.push([redPct+'%',fmt(redPct)]);
+      if (redPct > 0) { segs.push([redPct+'%','#ef4444']); lbls.push([redPct+'%',fmt(redPct)]); }
       bar(segs, lbls);
-      if (ties > 0 && tieTeams) copy.textContent = "Wow! If " + tieTeams[0] + ", " + tieTeams[1] + ", " + tieTeams[2] + " & " + tieTeams[3] + " win, it's a " + tieScore + "-all tie!";
+      tieCopy();
       updateStickyOffsets();
     }
 
