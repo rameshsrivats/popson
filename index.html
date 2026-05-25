@@ -67,7 +67,7 @@
     }
     .sb-inner {
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: center;
       max-width: 700px;
       margin: 0 auto;
@@ -101,6 +101,7 @@
       gap: 6px;
       flex-shrink: 0;
       padding: 0 6px;
+      margin-top: 14px;
     }
     .sb-vs {
       font-size: 9px;
@@ -113,9 +114,10 @@
     .sb-ranks {
       display: flex;
       flex-direction: column;
-      gap: 0px;
+      justify-content: space-between;
       flex: 1;
       min-width: 0;
+      align-self: stretch;
     }
     .sb-ranks-left  { align-items: flex-end; }
     .sb-ranks-right { align-items: flex-start; }
@@ -655,6 +657,11 @@
       .sb-inner { gap: 7px; padding: 10px 8px 14px; }
       .sb-rank  { font-size: 9px; }
       .sb-preal { display: none; }
+      .sb-center-top { gap: 7px; }
+      .sb-scores { margin-top: 7px; }
+      .sb-tow { height: 18px; border-radius: 9px; margin-top: 6px; }
+      .sb-tow-lbl { font-size: 8px; }
+      .sb-tow-copy { font-size: 11px; margin-top: 3px; }
 
       /* Fixture table */
       table { min-width: 0; }
@@ -822,6 +829,56 @@
       color: #fff;
     }
     .v-mult { background: #EEF2FF; color: #4338CA; }
+
+    /* ── Tug-of-war bar ──────────────────────────────── */
+    .sb-center {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      flex-shrink: 0;
+    }
+    .sb-center-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 12px;
+    }
+    .sb-tow {
+      position: relative;
+      height: 20px;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 8px;
+      display: flex;
+    }
+    .sb-tow-seg {
+      height: 100%;
+      min-width: 2px;
+    }
+    .sb-tow-labels {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      pointer-events: none;
+    }
+    .sb-tow-lbl {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      font-weight: 700;
+      color: #fff;
+      white-space: nowrap;
+      z-index: 2;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
+    .sb-tow-copy {
+      font-size: 13px;
+      color: rgba(255,255,255,0.55);
+      text-align: center;
+      margin-top: 4px;
+      line-height: 1.3;
+    }
   </style>
 </head>
 
@@ -856,29 +913,30 @@
         <div class="sb-rank">10. KKR</div>
       </div>
 
-      <!-- Pop avatar + labels -->
-      <div class="sb-player">
-        <div class="avatar-wrap">
-          <img src="assets/pop-lg.png" alt="Ramesh">
+      <div class="sb-center">
+        <div class="sb-center-top">
+          <div class="sb-player">
+            <div class="avatar-wrap">
+              <img src="assets/pop-lg.png" alt="Ramesh">
+            </div>
+            <div class="sb-pname">Pop</div>
+            <div class="sb-preal">Ramesh</div>
+          </div>
+          <div class="sb-scores">
+            <span class="header-score" id="sb-pop">0</span>
+            <div class="sb-vs">vs</div>
+            <span class="header-score" id="sb-son">0</span>
+          </div>
+          <div class="sb-player">
+            <div class="avatar-wrap">
+              <img src="assets/son-lg.png" alt="Anmol">
+            </div>
+            <div class="sb-pname">Son</div>
+            <div class="sb-preal">Anmol</div>
+          </div>
         </div>
-        <div class="sb-pname">Pop</div>
-        <div class="sb-preal">Ramesh</div>
-      </div>
-
-      <!-- Scores -->
-      <div class="sb-scores">
-        <span class="header-score" id="sb-pop">0</span>
-        <div class="sb-vs">vs</div>
-        <span class="header-score" id="sb-son">0</span>
-      </div>
-
-      <!-- Son avatar + labels -->
-      <div class="sb-player">
-        <div class="avatar-wrap">
-          <img src="assets/son-lg.png" alt="Anmol">
-        </div>
-        <div class="sb-pname">Son</div>
-        <div class="sb-preal">Anmol</div>
+        <div class="sb-tow" id="sb-tow"></div>
+        <div class="sb-tow-copy" id="sb-tow-copy"></div>
       </div>
 
       <!-- Son's rankings (right column, left-aligned) -->
@@ -1118,6 +1176,115 @@
       document.getElementById('sb-pop').textContent = pop;
       document.getElementById('sb-son').textContent = son;
       renderGraph();
+      renderTow();
+    }
+
+    /* ── Playoff scenario calculator ─────────────── */
+    function computePlayoffScenarios() {
+      let basePop = 0, baseSon = 0;
+      for (const [k, v] of Object.entries(results)) {
+        if (isNaN(+k) || v === 'NR') continue;
+        const [,,,a,b] = FIXTURES[+k];
+        const { imp, popTeam } = computeMatch(a, b);
+        if (v === popTeam) basePop += imp; else baseSon += imp;
+      }
+      const q1a = 'RCB', q1b = 'GT', ela = 'SRH', elb = 'RR';
+      const q1Fixed = results['Q1'], elFixed = results['EL'];
+      const q2Fixed = results['Q2'], fFixed = results['F'];
+      const q1Opts = q1Fixed ? [q1Fixed] : [q1a, q1b];
+      const elOpts = elFixed ? [elFixed] : [ela, elb];
+      let popWins = 0, sonWins = 0, ties = 0, tieScore = null, tieTeams = null;
+      for (const q1w of q1Opts) {
+        for (const elw of elOpts) {
+          let q2ta = null, q2tb = null;
+          if (q1w !== 'NR' && elw !== 'NR') {
+            q2ta = (q1w === q1a) ? q1b : q1a;
+            q2tb = elw;
+          }
+          const q2Opts = q2Fixed ? [q2Fixed] : (q2ta && q2tb ? [q2ta, q2tb] : [null]);
+          for (const q2w of q2Opts) {
+            let fta = null, ftb = null;
+            if (q1w !== 'NR' && q2w && q2w !== 'NR') { fta = q1w; ftb = q2w; }
+            const fOpts = fFixed ? [fFixed] : (fta && ftb ? [fta, ftb] : [null]);
+            for (const fw of fOpts) {
+              let pop = basePop, son = baseSon;
+              if (q1w && q1w !== 'NR') {
+                const m = computeMatch(q1a, q1b);
+                if (q1w === m.popTeam) pop += m.imp * 2; else son += m.imp * 2;
+              }
+              if (elw && elw !== 'NR') {
+                const m = computeMatch(ela, elb);
+                if (elw === m.popTeam) pop += m.imp * 2; else son += m.imp * 2;
+              }
+              if (q2w && q2w !== 'NR' && q2ta && q2tb) {
+                const m = computeMatch(q2ta, q2tb);
+                if (q2w === m.popTeam) pop += m.imp * 3; else son += m.imp * 3;
+              }
+              if (fw && fw !== 'NR' && fta && ftb) {
+                const m = computeMatch(fta, ftb);
+                if (fw === m.popTeam) pop += m.imp * 5; else son += m.imp * 5;
+              }
+              if (pop > son) popWins++;
+              else if (son > pop) sonWins++;
+              else { ties++; tieScore = pop; tieTeams = [q1w, elw, q2w, fw]; }
+            }
+          }
+        }
+      }
+      return { popWins, sonWins, ties, total: popWins + sonWins + ties, tieScore, tieTeams };
+    }
+
+    function renderTow() {
+      const tow = document.getElementById('sb-tow');
+      const copy = document.getElementById('sb-tow-copy');
+      if (!tow || !copy) return;
+      const { popWins, sonWins, ties, total, tieScore, tieTeams } = computePlayoffScenarios();
+      if (total === 0) { tow.innerHTML = ''; copy.textContent = ''; return; }
+      const popPct = (popWins / total) * 100;
+      const sonPct = (sonWins / total) * 100;
+      const tiePct = (ties / total) * 100;
+      function fmt(p) { return parseFloat(p.toFixed(2)) + '%'; }
+      tow.innerHTML = ''; copy.textContent = '';
+
+      function bar(segs, labels) {
+        var s = '', l = '';
+        segs.forEach(function(x) { s += '<div class="sb-tow-seg" style="width:' + x[0] + ';background:' + x[1] + ';"></div>'; });
+        labels.forEach(function(x) { l += '<div class="sb-tow-lbl" style="width:' + x[0] + ';">' + x[1] + '</div>'; });
+        tow.innerHTML = s + '<div class="sb-tow-labels">' + l + '</div>';
+      }
+
+      if (total === 1) {
+        if (ties === 1) {
+          bar([['100%','#C8960C']], [['100%',tieScore + '–' + tieScore + ' TIE']]);
+        } else {
+          var w = popWins > 0 ? 'Pop' : 'Son';
+          bar([['100%','#22c55e']], [['100%',w.toUpperCase() + ' WINS']]);
+          copy.textContent = "It's done. " + w + " wins no matter what.";
+        }
+        return;
+      }
+      if (popWins === sonWins && ties === 0) {
+        bar([['calc(50% - 1px)','#f97316'],['2px','#fff'],['calc(50% - 1px)','#f97316']],
+            [['50%',fmt(50)],['50%',fmt(50)]]);
+        copy.textContent = 'Perfectly balanced.';
+        return;
+      }
+      if (popWins === sonWins) {
+        bar([[popPct+'%','#f97316'],[tiePct+'%','#C8960C'],[sonPct+'%','#f97316']],
+            [[popPct+'%',fmt(popPct)],[tiePct+'%',fmt(tiePct)],[sonPct+'%',fmt(sonPct)]]);
+        if (tieTeams) copy.textContent = "Wow! If " + tieTeams[0] + ", " + tieTeams[1] + ", " + tieTeams[2] + " & " + tieTeams[3] + " win the 4 playoffs, it's a " + tieScore + "-all tie!";
+        return;
+      }
+      var popLeads = popWins > sonWins;
+      var greenPct = popLeads ? popPct : sonPct;
+      var redPct = popLeads ? sonPct : popPct;
+      var segs = [[greenPct+'%','#22c55e']];
+      var lbls = [[greenPct+'%',fmt(greenPct)]];
+      if (tiePct > 0) { segs.push([tiePct+'%','#C8960C']); lbls.push([tiePct+'%',fmt(tiePct)]); }
+      segs.push([redPct+'%','#ef4444']); lbls.push([redPct+'%',fmt(redPct)]);
+      bar(segs, lbls);
+      if (ties > 0 && tieTeams) copy.textContent = "Wow! If " + tieTeams[0] + ", " + tieTeams[1] + ", " + tieTeams[2] + " & " + tieTeams[3] + " win the 4 playoffs, it's a " + tieScore + "-all tie!";
+      updateStickyOffsets();
     }
 
     /* ── Date helpers ─────────────────────────────── */
@@ -1406,8 +1573,8 @@
       requestAnimationFrame(step);
     }
 
-    /* ── Sticky offsets (set after fonts + images load) ────── */
-    window.addEventListener('load', () => {
+    /* ── Sticky offsets ────────────────────────────────────── */
+    function updateStickyOffsets() {
       const scoreBar = document.querySelector('.score-bar');
       const theadEl  = document.querySelector('thead');
       const navStrip = document.querySelector('.race-nav-strip');
@@ -1417,7 +1584,8 @@
         theadEl.style.top = sbH + 'px';
         if (navStrip) navStrip.style.top = (sbH + thH) + 'px';
       }
-    });
+    }
+    window.addEventListener('load', updateStickyOffsets);
 
     /* ── Graph ────────────────────────────────────────── */
     const POP_C = '#E8A030', SON_C = '#5B9BF8';
