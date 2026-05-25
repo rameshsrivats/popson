@@ -1262,11 +1262,11 @@
 
       if (total === 1) {
         if (ties === 1) {
-          bar([['100%','#C8960C']], [['100%',tieScore + '–' + tieScore + ' TIE']]);
+          bar([['100%','#f97316']], [['100%',"It's a tie!"]]);
+        } else if (popWins > 0) {
+          bar([['100%','#22c55e']], [['100%','Pop wins! 🏆']]);
         } else {
-          var w = popWins > 0 ? 'Pop' : 'Son';
-          bar([['100%','#22c55e']], [['100%',w.toUpperCase() + ' WINS']]);
-          copy.textContent = "It's done. " + w + " wins no matter what.";
+          bar([['100%','#ef4444']], [['100%','Son wins! 🏆']]);
         }
         return;
       }
