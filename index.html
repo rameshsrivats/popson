@@ -1398,6 +1398,18 @@
         console.error('Firebase write error:', e);
       }
       if (team) results[idx] = team; else delete results[idx];
+
+      if (!team && typeof idx === 'string') {
+        const deps = idx === 'Q1' || idx === 'EL' ? ['Q2', 'F'] : idx === 'Q2' ? ['F'] : [];
+        for (const dep of deps) {
+          if (results[dep] !== undefined) {
+            delete results[dep];
+            try { await fetch(`${DB}/results/${dep}.json`, { method: 'DELETE' }); }
+            catch (e) { console.error('Cascade delete error:', e); }
+          }
+        }
+      }
+
       updateScoreboard();
       renderTable();
     }
@@ -1491,6 +1503,7 @@
       });
 
       // Playoff header
+      const playoffRows = {};
       const hdrTr = document.createElement('tr');
       hdrTr.className = 'playoff-header-row';
       hdrTr.innerHTML = '<td colspan="6"><div class="playoff-header">PLAYOFFS</div></td>';
@@ -1543,23 +1556,27 @@
           tbody.appendChild(tr);
         }
 
+        playoffRows[pm.key] = tr;
         if (results[pm.key] !== undefined) lastResultRow = tr;
         if (teamsKnown && results[pm.key] === undefined && !nextMatch) {
           nextMatch = { type: 'playoff', data: pm };
         }
       });
 
-      // Insert hero after last result row
-      if (nextMatch && lastResultRow) {
+      // Insert hero card
+      if (nextMatch) {
         const heroRow = nextMatch.type === 'league'
           ? createHeroRow(nextMatch.idx)
           : createPlayoffHeroRow(nextMatch.data);
-        lastResultRow.after(heroRow);
-      } else if (nextMatch && !lastResultRow) {
-        const heroRow = nextMatch.type === 'league'
-          ? createHeroRow(nextMatch.idx)
-          : createPlayoffHeroRow(nextMatch.data);
-        tbody.prepend(heroRow);
+
+        if (nextMatch.type === 'playoff') {
+          const targetRow = playoffRows[nextMatch.data.key];
+          if (targetRow) targetRow.before(heroRow);
+        } else if (lastResultRow) {
+          lastResultRow.after(heroRow);
+        } else {
+          tbody.prepend(heroRow);
+        }
       }
     }
 
