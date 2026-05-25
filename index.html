@@ -795,6 +795,27 @@
     }
     .race-dot-pop { background: #E8A030; }
     .race-dot-son { background: #5B9BF8; }
+
+    /* ── Playoff styles ──────────────────────────────── */
+    .playoff-header-row td { padding: 0; background: var(--bg); }
+    .playoff-header-row:hover td { background: var(--bg); }
+    .playoff-header {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22px;
+      letter-spacing: 0.18em;
+      color: var(--navy);
+      padding: 24px 14px 8px;
+      border-bottom: 2px solid var(--navy);
+    }
+    .row-tbd { opacity: 0.4; }
+    .row-tbd:hover { opacity: 0.5; }
+    .tbd-text {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-3);
+      letter-spacing: 0.04em;
+    }
+    .v-mult { background: #EEF2FF; color: #4338CA; }
   </style>
 </head>
 
@@ -900,7 +921,7 @@
     </table>
   </div>
 
-  <footer class="footer">70 league fixtures &nbsp;·&nbsp; All times IST</footer>
+  <footer class="footer">70 league fixtures + 4 playoffs &nbsp;·&nbsp; All times IST</footer>
   </div><!-- /.content -->
 
   <section id="the-race" class="race-section">
@@ -1019,6 +1040,30 @@
       [24,'May','19:30','KKR','DC'],
     ];
 
+    /* ── Playoff cascade ─────────────────────────── */
+    function getPlayoffTeams() {
+      const q1a = 'RCB', q1b = 'GT';
+      const ela = 'SRH', elb = 'RR';
+      let q2a = null, q2b = null;
+      const q1r = results['Q1'], elr = results['EL'];
+      if (q1r && q1r !== 'NR' && elr && elr !== 'NR') {
+        q2a = (q1r === q1a) ? q1b : q1a;
+        q2b = elr;
+      }
+      let fa = null, fb = null;
+      const q2r = results['Q2'];
+      if (q1r && q1r !== 'NR' && q2r && q2r !== 'NR') {
+        fa = q1r;
+        fb = q2r;
+      }
+      return [
+        { key:'Q1', label:'Q1', type:'Qualifier 1', day:26, mon:'May', time:'19:30', a:q1a, b:q1b, mult:2 },
+        { key:'EL', label:'EL', type:'Eliminator',  day:27, mon:'May', time:'19:30', a:ela, b:elb, mult:2 },
+        { key:'Q2', label:'Q2', type:'Qualifier 2', day:29, mon:'May', time:'19:30', a:q2a, b:q2b, mult:3 },
+        { key:'F',  label:'F',  type:'Final',       day:31, mon:'May', time:'19:30', a:fa,  b:fb,  mult:5 },
+      ];
+    }
+
     /* ── Scoring engine ───────────────────────────── */
     function computeMatch(a, b) {
       const pA = POP[a], pB = POP[b];
@@ -1050,10 +1095,19 @@
     function updateScoreboard() {
       let pop = 0, son = 0;
       for (const [k, v] of Object.entries(results)) {
+        if (isNaN(+k)) continue;
         if (v === 'NR') continue;
         const [,,,a,b] = FIXTURES[+k];
         const { imp, popTeam } = computeMatch(a, b);
         if (v === popTeam) pop += imp; else son += imp;
+      }
+      const pMatches = getPlayoffTeams();
+      for (const pm of pMatches) {
+        const v = results[pm.key];
+        if (!v || v === 'NR' || !pm.a || !pm.b) continue;
+        const { imp, popTeam } = computeMatch(pm.a, pm.b);
+        const eff = imp * pm.mult;
+        if (v === popTeam) pop += eff; else son += eff;
       }
       document.getElementById('sb-pop').textContent = pop;
       document.getElementById('sb-son').textContent = son;
@@ -1079,7 +1133,7 @@
 
     /* ── Derived state ────────────────────────────── */
     function getLastIdx() {
-      const keys = Object.keys(results).map(Number);
+      const keys = Object.keys(results).map(Number).filter(k => !isNaN(k));
       return keys.length ? Math.max(...keys) : -1;
     }
     function getNextIdx() {
@@ -1105,7 +1159,8 @@
       td.appendChild(sel);
     }
 
-    function renderResultCell(td, idx, a, b, isPast, isToday) {
+    function renderResultCell(td, idx, a, b, isPast, isToday, mult) {
+      mult = mult || 1;
       const winner = results[idx];
       td.innerHTML = '';
       if (winner === 'NR') {
@@ -1117,11 +1172,12 @@
         td.appendChild(wrap);
       } else if (winner !== undefined) {
         const { imp, popTeam } = computeMatch(a, b);
+        const eff = imp * mult;
         const isPop = winner === popTeam;
         const img = document.createElement('img');
         img.src   = `assets/${isPop ? 'pop' : 'son'}-sm.png`;
         img.className = 'result-avatar';
-        img.title = `${isPop ? 'Pop' : 'Son'} +${imp}`;
+        img.title = `${isPop ? 'Pop' : 'Son'} +${eff}`;
         img.addEventListener('click', () => showDropdown(td, idx, a, b, winner));
         td.appendChild(img);
       } else if (isPast || isToday) {
@@ -1171,6 +1227,29 @@
       return tr;
     }
 
+    function createPlayoffHeroRow(pm) {
+      const { imp, popTeam, sonTeam } = computeMatch(pm.a, pm.b);
+      const eff  = imp * pm.mult;
+      const dow  = getDow(pm.day, pm.mon);
+      const dd   = String(pm.day).padStart(2, '0');
+      const vCls = eff <= 3 ? 'v-lo' : eff <= 6 ? 'v-md' : 'v-hi';
+      const tr   = document.createElement('tr');
+      tr.id = 'hero-row'; tr.className = 'hero-row';
+      tr.innerHTML =
+        `<td colspan="6" class="hero-cell"><div class="hero-card">` +
+          `<div class="hero-eyebrow">${pm.type} · ×${pm.mult}</div>` +
+          `<div class="hero-matchup">` +
+            `<img src="assets/pop-md.png" alt="Pop" class="hero-avatar">` +
+            `<span class="hero-badge t-${popTeam}">${popTeam}</span>` +
+            `<div class="hero-mid"><span class="hero-imp ${vCls}">${eff}</span></div>` +
+            `<span class="hero-badge t-${sonTeam}">${sonTeam}</span>` +
+            `<img src="assets/son-md.png" alt="Son" class="hero-avatar">` +
+          `</div>` +
+          `<div class="hero-datetime">${dow} ${dd} ${pm.mon} · ${to12h(pm.time)} IST</div>` +
+        `</div></td>`;
+      return tr;
+    }
+
     /* ── Table renderer ───────────────────────────── */
     const tbody = document.getElementById('tbody');
     let lastResultRow = null;
@@ -1178,10 +1257,9 @@
     function renderTable() {
       tbody.innerHTML = '';
       lastResultRow = null;
-      const lastIdx = getLastIdx();
-      const nextIdx = getNextIdx();
       const now = new Date();
       now.setHours(0, 0, 0, 0);
+      let nextMatch = null;
 
       FIXTURES.forEach(([day, mon, time, a, b], i) => {
         const { imp, popTeam, sonTeam } = computeMatch(a, b);
@@ -1210,8 +1288,80 @@
         tbody.appendChild(tr);
         renderResultCell(tr.querySelector('.c-res'), i, a, b, isPast, isToday);
         if (results[i] !== undefined) lastResultRow = tr;
-        if (i === lastIdx && nextIdx !== -1) tbody.appendChild(createHeroRow(nextIdx));
+        if (results[i] === undefined && !nextMatch) nextMatch = { type: 'league', idx: i };
       });
+
+      // Playoff header
+      const hdrTr = document.createElement('tr');
+      hdrTr.className = 'playoff-header-row';
+      hdrTr.innerHTML = '<td colspan="6"><div class="playoff-header">PLAYOFFS</div></td>';
+      tbody.appendChild(hdrTr);
+
+      // Playoff matches
+      const pMatches = getPlayoffTeams();
+      pMatches.forEach(pm => {
+        const mDate = getDate(pm.day, pm.mon);
+        mDate.setHours(0, 0, 0, 0);
+        const isPast  = mDate < now;
+        const isToday = mDate.getTime() === now.getTime();
+        const dow = getDow(pm.day, pm.mon);
+        const dd  = String(pm.day).padStart(2, '0');
+        const teamsKnown = pm.a && pm.b;
+
+        const tr = document.createElement('tr');
+        if (isToday && teamsKnown) tr.classList.add('row-today');
+        if (!teamsKnown) tr.classList.add('row-tbd');
+
+        if (teamsKnown) {
+          const { imp, popTeam, sonTeam } = computeMatch(pm.a, pm.b);
+          const eff = imp * pm.mult;
+          const vCls = eff <= 3 ? 'v-lo' : eff <= 6 ? 'v-md' : 'v-hi';
+          tr.innerHTML =
+            `<td class="c-num">${pm.label}</td>` +
+            `<td class="c-date">` +
+              `<span class="d-day">${dow}</span>` +
+              `<span class="d-rest"> ${dd} ${pm.mon}</span>` +
+              ` <span class="d-time">${to12h(pm.time)}</span>` +
+            `</td>` +
+            `<td class="c-pop">${tbadge(popTeam)}</td>` +
+            `<td class="c-son">${tbadge(sonTeam)}</td>` +
+            `<td class="c-val"><span class="vbadge ${vCls}">${eff}</span></td>` +
+            `<td class="c-res"></td>`;
+          tbody.appendChild(tr);
+          renderResultCell(tr.querySelector('.c-res'), pm.key, pm.a, pm.b, isPast, isToday, pm.mult);
+        } else {
+          tr.innerHTML =
+            `<td class="c-num">${pm.label}</td>` +
+            `<td class="c-date">` +
+              `<span class="d-day">${dow}</span>` +
+              `<span class="d-rest"> ${dd} ${pm.mon}</span>` +
+              ` <span class="d-time">${to12h(pm.time)}</span>` +
+            `</td>` +
+            `<td class="c-pop"><span class="tbd-text">TBD</span></td>` +
+            `<td class="c-son"><span class="tbd-text">TBD</span></td>` +
+            `<td class="c-val"><span class="vbadge v-mult">×${pm.mult}</span></td>` +
+            `<td class="c-res"><span style="color:var(--text-3)">—</span></td>`;
+          tbody.appendChild(tr);
+        }
+
+        if (results[pm.key] !== undefined) lastResultRow = tr;
+        if (teamsKnown && results[pm.key] === undefined && !nextMatch) {
+          nextMatch = { type: 'playoff', data: pm };
+        }
+      });
+
+      // Insert hero after last result row
+      if (nextMatch && lastResultRow) {
+        const heroRow = nextMatch.type === 'league'
+          ? createHeroRow(nextMatch.idx)
+          : createPlayoffHeroRow(nextMatch.data);
+        lastResultRow.after(heroRow);
+      } else if (nextMatch && !lastResultRow) {
+        const heroRow = nextMatch.type === 'league'
+          ? createHeroRow(nextMatch.idx)
+          : createPlayoffHeroRow(nextMatch.data);
+        tbody.prepend(heroRow);
+      }
     }
 
     /* ── Scroll helper ────────────────────────────── */
@@ -1276,6 +1426,17 @@
         if (w !== 'NR') { if (w === popTeam) pG = imp; else sG = imp; }
         pT += pG; sT += sG;
         data.push({ matchNum: i + 1, popTotal: pT, sonTotal: sT, popGain: pG, sonGain: sG, winner: w });
+      });
+      const pMatches = getPlayoffTeams();
+      pMatches.forEach((pm, pi) => {
+        if (!pm.a || !pm.b || results[pm.key] === undefined) return;
+        const { imp, popTeam } = computeMatch(pm.a, pm.b);
+        const eff = imp * pm.mult;
+        const w = results[pm.key];
+        let pG = 0, sG = 0;
+        if (w !== 'NR') { if (w === popTeam) pG = eff; else sG = eff; }
+        pT += pG; sT += sG;
+        data.push({ matchNum: 71 + pi, label: pm.key, popTotal: pT, sonTotal: sT, popGain: pG, sonGain: sG, winner: w });
       });
       return data;
     }
@@ -1356,7 +1517,8 @@
       function showTip(idx, cX, cY) {
         const d = data[idx];
         const gain = d.winner === 'NR' ? 'No Result' : (d.popGain > 0 ? `+${d.popGain} Pop` : `+${d.sonGain} Son`);
-        tip.textContent = `Match ${d.matchNum}: ${gain} | Total: ${d.popTotal}–${d.sonTotal}`;
+        const matchLabel = d.label || `Match ${d.matchNum}`;
+        tip.textContent = `${matchLabel}: ${gain} | Total: ${d.popTotal}–${d.sonTotal}`;
         tip.removeAttribute('hidden');
         const wr = wrap.getBoundingClientRect();
         const tw = tip.offsetWidth, th = tip.offsetHeight;
@@ -1412,10 +1574,10 @@
         fbData = SEED;
       }
 
-      // Normalise Firebase string keys → numbers
+      // Normalise Firebase keys: numbers for league, strings for playoffs
       results = {};
       for (const [k, v] of Object.entries(fbData)) {
-        if (v) results[+k] = v;
+        if (v) results[isNaN(+k) ? k : +k] = v;
       }
 
       updateScoreboard();
