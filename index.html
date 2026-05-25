@@ -1044,16 +1044,16 @@
     function getPlayoffTeams() {
       const q1a = 'RCB', q1b = 'GT';
       const ela = 'SRH', elb = 'RR';
-      let q2a = null, q2b = null;
-      const q1r = results['Q1'], elr = results['EL'];
-      if (q1r && q1r !== 'NR' && elr && elr !== 'NR') {
+      const q1r = results['Q1'], elr = results['EL'], q2r = results['Q2'];
+      let q2a = null, q2b = null, fa = null, fb = null;
+      if (q1r && q1r !== 'NR') {
         q2a = (q1r === q1a) ? q1b : q1a;
+        fa = q1r;
+      }
+      if (elr && elr !== 'NR') {
         q2b = elr;
       }
-      let fa = null, fb = null;
-      const q2r = results['Q2'];
-      if (q1r && q1r !== 'NR' && q2r && q2r !== 'NR') {
-        fa = q1r;
+      if (q2r && q2r !== 'NR') {
         fb = q2r;
       }
       return [
@@ -1340,8 +1340,8 @@
               `<span class="d-rest"> ${dd} ${pm.mon}</span>` +
               ` <span class="d-time">${to12h(pm.time)}</span>` +
             `</td>` +
-            `<td class="c-pop"><span class="tbd-text">TBD</span></td>` +
-            `<td class="c-son"><span class="tbd-text">TBD</span></td>` +
+            `<td class="c-pop">${pm.a ? tbadge(pm.a) : '<span class="tbd-text">TBD</span>'}</td>` +
+            `<td class="c-son">${pm.b ? tbadge(pm.b) : '<span class="tbd-text">TBD</span>'}</td>` +
             `<td class="c-val"><span class="vbadge v-mult">×${pm.mult}</span></td>` +
             `<td class="c-res"><span style="color:var(--text-3)">—</span></td>`;
           tbody.appendChild(tr);
